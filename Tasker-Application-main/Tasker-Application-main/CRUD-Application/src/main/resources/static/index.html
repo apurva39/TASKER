@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Task Management System</title>
+    <link rel="stylesheet" href="styles.css">
+
+
+</head>
+
+<body>
+    <h1>Tasker</h1>
+    <div class="container">
+        <button type="button" class="btn btn-outline-success" onclick="openCreateTaskForm()"><i>+</i> Create New Task </button>
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th>Priority</th>
+                    <th>Tag</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Task details will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create Task Form Modal -->
+    <div id="createTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateForm()">&times;</span>
+            <form id="createTaskForm">
+                <h2>Create New Task</h2>
+                <div>
+                    <label for="createTaskDescription">Description:</label>
+                    <textarea id="createTaskDescription" name="createTaskDescription" required></textarea>
+                </div>
+                <div>
+                    <label for="createTaskStatus">Status:</label>
+                    <select id="createTaskStatus" name="createTaskStatus" required>
+                        <option value="not started">Not Started</option>
+                        <option value="started">Started</option>
+                        <option value="half done">Half Done</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="createTaskDueDate">Due Date:</label>
+                    <input type="date" id="createTaskDueDate" name="createTaskDueDate" required>
+                </div>
+                <div>
+                    <label for="createTaskPriority">Priority:</label>
+                    <select id="createTaskPriority" name="createTaskPriority" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="createTaskTag">Tag:</label>
+                    <select id="createTaskTag" name="createTaskTag" required>
+                        <option value="social">Social</option>
+                        <option value="work">Work</option>
+                        <option value="study">Study</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="home">Home</option>
+                        <option value="self">Self</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" type="button" onclick="createTask()">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Task Form Modal -->
+    <div id="updateTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUpdateForm()">&times;</span>
+            <form id="updateTaskForm">
+                <h2>Update Task</h2>
+                <input type="hidden" id="updateTaskId" name="updateTaskId">
+                <div>
+                    <label for="updateTaskDescription">Description:</label>
+                    <textarea id="updateTaskDescription" name="updateTaskDescription" required></textarea>
+                </div>
+                <div>
+                    <label for="updateTaskStatus">Status:</label>
+                    <select id="updateTaskStatus" name="updateTaskStatus" required>
+                        <option value="not started">Not Started</option>
+                        <option value="started">Started</option>
+                        <option value="half done">Half Done</option>
+                        <option value="done">Done</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="updateTaskDueDate">Due Date:</label>
+                    <input type="date" id="updateTaskDueDate" name="updateTaskDueDate" required>
+                </div>
+                <div>
+                    <label for="updateTaskPriority">Priority:</label>
+                    <select id="updateTaskPriority" name="updateTaskPriority" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="updateTaskTag">Tag:</label>
+                    <select id="updateTaskTag" name="updateTaskTag" required>
+                        <option value="social">Social</option>
+                        <option value="work">Work</option>
+                        <option value="study">Study</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="home">Home</option>
+                        <option value="self">Self</option>
+                    </select>
+                </div>
+                <button type="button" onclick="updateTask()">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchTasks);
+
+        async function fetchTasks() {
+            try {
+                const response = await fetch('/task');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const tasks = await response.json();
+                updateTaskTable(tasks);
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+        }
+
+        function updateTaskTable(tasks) {
+            const tableBody = document.querySelector('#employeeTable tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            tasks.forEach(task => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${task.id}</td>
+                    <td>${task.description}</td>
+                    <td>${task.status}</td>
+                    <td>${task.dueDate}</td>
+                    <td>${task.priority}</td>
+                    <td>${task.tag}</td>
+                    <td>
+                        <button onclick="openUpdateTaskForm(${task.id}, '${task.description}', '${task.status}', '${task.dueDate}', '${task.priority}', '${task.tag}')" type="button" class="btn btn-success">Update</button>
+                        <button onclick="deleteTask(${task.id})" type="button" class="btn btn-danger">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function openCreateTaskForm() {
+            document.getElementById('createTaskModal').style.display = 'block';
+        }
+
+        function closeCreateForm() {
+            document.getElementById('createTaskModal').style.display = 'none';
+        }
+
+        async function createTask() {
+            const description = document.getElementById('createTaskDescription').value;
+            const status = document.getElementById('createTaskStatus').value;
+            const dueDate = document.getElementById('createTaskDueDate').value;
+            const priority = document.getElementById('createTaskPriority').value;
+            const tag = document.getElementById('createTaskTag').value;
+
+            const newTask = {
+                description: description,
+                status: status,
+                dueDate: dueDate,
+                priority: priority,
+                tag: tag
+            };
+
+            try {
+                const response = await fetch('/task', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newTask)
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const createdTask = await response.json();
+                alert('Task created successfully');
+                closeCreateForm();
+                fetchTasks(); // Reload tasks to show the new task
+
+            } catch (error) {
+                alert('Error creating task');
+                console.error('Error:', error);
+            }
+        }
+
+        function openUpdateTaskForm(id, description, status, dueDate, priority, tag) {
+            document.getElementById('updateTaskId').value = id;
+            document.getElementById('updateTaskDescription').value = description;
+            document.getElementById('updateTaskStatus').value = status;
+            document.getElementById('updateTaskDueDate').value = dueDate;
+            document.getElementById('updateTaskPriority').value = priority;
+            document.getElementById('updateTaskTag').value = tag;
+
+            document.getElementById('updateTaskModal').style.display = 'block';
+        }
+
+        function closeUpdateForm() {
+            document.getElementById('updateTaskModal').style.display = 'none';
+        }
+
+        async function updateTask() {
+            const id = document.getElementById('updateTaskId').value;
+            const description = document.getElementById('updateTaskDescription').value;
+            const status = document.getElementById('updateTaskStatus').value;
+            const dueDate = document.getElementById('updateTaskDueDate').value;
+            const priority = document.getElementById('updateTaskPriority').value;
+            const tag = document.getElementById('updateTaskTag').value;
+
+            const updatedTask = {
+                description: description,
+                status: status,
+                dueDate: dueDate,
+                priority: priority,
+                tag: tag
+            };
+
+            try {
+                const response = await fetch(`/task/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedTask)
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                alert('Task updated successfully');
+                closeUpdateForm();
+                fetchTasks(); // Reload tasks to reflect updates
+
+            } catch (error) {
+                alert('Error updating task');
+                console.error('Error:', error);
+            }
+        }
+
+        async function deleteTask(id) {
+            try {
+                const response = await fetch(`/task/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                alert('Task deleted successfully');
+                fetchTasks(); // Reload tasks to remove the deleted task
+
+            } catch (error) {
+                alert('Error deleting task');
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
